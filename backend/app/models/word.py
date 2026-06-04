@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -7,8 +8,8 @@ from sqlalchemy.orm import mapped_column
 from app.db.base_class import Base
 
 
-class User(Base):
-    __tablename__ = "users"
+class Word(Base):
+    __tablename__ = "words"
 
     id: Mapped[str] = mapped_column(
         String,
@@ -16,12 +17,14 @@ class User(Base):
         default=lambda: str(uuid4())
     )
 
-    email: Mapped[str] = mapped_column(
-        String(255),
-        unique=True,
-        index=True
+    english: Mapped[str] = mapped_column(
+        String(255)
     )
 
-    hashed_password: Mapped[str] = mapped_column(
+    russian: Mapped[str] = mapped_column(
         String(255)
+    )
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id")
     )
