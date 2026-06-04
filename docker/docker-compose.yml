@@ -18,6 +18,8 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - english-network
 
@@ -27,6 +29,9 @@ services:
       - "6379:6379"
     networks:
       - english-network
+
+volumes:
+  postgres_data:
 
 networks:
   english-network:
