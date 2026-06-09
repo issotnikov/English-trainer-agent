@@ -12,13 +12,15 @@ class WordRepository:
         self,
         english: str,
         russian: str,
-        user_id: str
+        user_id: str,
+        category_id: str
     ) -> Word:
 
         word = Word(
             english=english,
             russian=russian,
-            user_id=user_id
+            user_id=user_id,
+            category_id=category_id
         )
 
         self.db.add(word)
@@ -35,6 +37,17 @@ class WordRepository:
         return (
             self.db.query(Word)
             .filter(Word.user_id == user_id)
+            .all()
+        )
+
+    def get_by_category_id(
+        self,
+        category_id: str
+    ) -> list[Word]:
+        
+        return (
+            self.db.query(Word)
+            .filter(Word.category_id == category_id)
             .all()
         )
 
@@ -60,3 +73,18 @@ class WordRepository:
         self.db.commit()
 
         return True
+
+def get_by_category(
+    self,
+    category_id: str,
+    user_id: str
+) -> list[Word]:
+
+    return (
+        self.db.query(Word)
+        .filter(
+            Word.category_id == category_id,
+            Word.user_id == user_id
+        )
+        .all()
+    )

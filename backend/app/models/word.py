@@ -1,7 +1,8 @@
 from uuid import uuid4
 
-from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import ForeignKey
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 
@@ -26,5 +27,13 @@ class Word(Base):
     )
 
     user_id: Mapped[str] = mapped_column(
-        ForeignKey("users.id")
+        String,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+    category_id: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("categories.id"),
+        nullable=False
     )

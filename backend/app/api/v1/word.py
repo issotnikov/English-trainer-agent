@@ -45,7 +45,8 @@ def create_word(
     return service.create_word(
         english=data.english,
         russian=data.russian,
-        user_id=current_user.id
+        user_id=current_user.id,
+        category_id=data.category_id
     )
 
 

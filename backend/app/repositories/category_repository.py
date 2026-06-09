@@ -38,6 +38,17 @@ class CategoryRepository:
             .all()
         )
 
+    def get_by_id(
+        self,
+        category_id: str
+    ) -> Category | None:
+
+        return (
+            self.db.query(Category)
+            .filter(Category.id == category_id)
+            .first()
+        )
+
     def delete(
         self,
         category_id: str,
