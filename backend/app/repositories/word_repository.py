@@ -44,10 +44,25 @@ class WordRepository:
         self,
         category_id: str
     ) -> list[Word]:
-        
+
         return (
             self.db.query(Word)
             .filter(Word.category_id == category_id)
+            .all()
+        )
+
+    def get_by_category_and_user(
+        self,
+        category_id: str,
+        user_id: str
+    ) -> list[Word]:
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.category_id == category_id,
+                Word.user_id == user_id
+            )
             .all()
         )
 
@@ -73,18 +88,3 @@ class WordRepository:
         self.db.commit()
 
         return True
-
-def get_by_category(
-    self,
-    category_id: str,
-    user_id: str
-) -> list[Word]:
-
-    return (
-        self.db.query(Word)
-        .filter(
-            Word.category_id == category_id,
-            Word.user_id == user_id
-        )
-        .all()
-    )
