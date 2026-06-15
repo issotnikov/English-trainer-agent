@@ -26,12 +26,24 @@ from app.schemas.training import (
     TrainingAnswerResponse
 )
 
+from app.schemas.training_history import (
+    TrainingHistoryItem
+)
+
+from app.schemas.training_stats import (
+    TrainingStatsResponse
+)
+
 from app.services.training_service import (
     TrainingService
 )
 
 from app.schemas.training_start import (
     TrainingStartRequest
+)
+
+from app.schemas.word_progress import (
+    WordProgressResponse
 )
 
 router = APIRouter(
@@ -114,3 +126,83 @@ def answer_training(
         )
 
     return result
+
+@router.get(
+    "/history",
+    response_model=list[TrainingHistoryItem]
+)
+def get_training_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    word_repo = WordRepository(db)
+
+    session_repo = TrainingSessionRepository(
+        db
+    )
+
+    service = TrainingService(
+        word_repo=word_repo,
+        session_repo=session_repo
+    )
+
+    return service.get_history(
+        current_user.id
+    )
+
+@router.get(
+    "/stats",
+    response_model=TrainingStatsResponse
+)
+def get_training_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    word_repo = WordRepository(db)
+
+    session_repo = TrainingSessionRepository(
+        db
+    )
+
+    service = TrainingService(
+        word_repo=word_repo,
+        session_repo=session_repo
+    )
+
+    return service.get_stats(
+        current_user.id
+    )
+
+@router.get(
+    "/words/progress",
+    response_model=list[
+        WordProgressResponse
+    ]
+)
+def get_word_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    word_repo = WordRepository(db)
+
+    session_repo = TrainingSessionRepository(
+        db
+    )
+
+    service = TrainingService(
+        word_repo=word_repo,
+        session_repo=session_repo
+    )
+
+    return service.get_word_progress(
+        current_user.id
+    )

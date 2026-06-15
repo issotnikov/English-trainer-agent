@@ -1,8 +1,13 @@
 from uuid import uuid4
+from datetime import datetime
 
 from sqlalchemy import String
 from sqlalchemy import Integer
 from sqlalchemy import ForeignKey
+from sqlalchemy import Text
+from sqlalchemy import DateTime
+from sqlalchemy import Boolean
+
 
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -44,4 +49,27 @@ class TrainingSession(Base):
     total_questions: Mapped[int] = mapped_column(
         Integer,
         default=0
+    )
+
+    word_order: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        default="[]"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    is_completed: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
     )

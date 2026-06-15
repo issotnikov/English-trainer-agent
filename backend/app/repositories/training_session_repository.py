@@ -12,13 +12,15 @@ class TrainingSessionRepository:
         self,
         user_id: str,
         total_questions: int,
-        category_id: str | None = None
+        category_id: str | None = None,
+        word_order: str = "[]"
     ) -> TrainingSession:
 
         session = TrainingSession(
             user_id=user_id,
             category_id=category_id,
-            total_questions=total_questions
+            total_questions=total_questions,
+            word_order=word_order
         )
 
         self.db.add(session)
@@ -50,3 +52,38 @@ class TrainingSessionRepository:
         self.db.refresh(session)
 
         return session
+
+    def get_user_history(
+        self,
+        user_id: str
+    ):
+
+        return (
+            self.db.query(
+                TrainingSession
+            )
+            .filter(
+                TrainingSession.user_id == user_id,
+                TrainingSession.is_completed == True
+            )
+            .order_by(
+                TrainingSession.created_at.desc()
+            )
+            .all()
+        )
+
+    def get_completed_sessions(
+        self,
+        user_id: str
+    ):
+
+        return (
+            self.db.query(
+                TrainingSession
+            )
+            .filter(
+                TrainingSession.user_id == user_id,
+                TrainingSession.is_completed == True
+            )
+            .all()
+        )

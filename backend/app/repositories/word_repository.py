@@ -88,3 +88,36 @@ class WordRepository:
         self.db.commit()
 
         return True
+
+    def update_training_result(
+        self,
+        word: Word,
+        is_correct: bool
+    ) -> Word:
+
+        from datetime import datetime
+
+        if is_correct:
+            word.correct_answers += 1
+        else:
+            word.wrong_answers += 1
+
+        word.last_trained_at = datetime.utcnow()
+
+        self.db.add(word)
+        self.db.commit()
+        self.db.refresh(word)
+
+        return word
+
+    def get_progress(
+        self,
+        user_id: str
+    ):
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .all()
+        )

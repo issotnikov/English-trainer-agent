@@ -1,5 +1,10 @@
 from uuid import uuid4
 
+from sqlalchemy import Integer
+from sqlalchemy import DateTime
+
+from datetime import datetime
+
 from sqlalchemy import String
 from sqlalchemy import ForeignKey
 
@@ -36,4 +41,23 @@ class Word(Base):
         String,
         ForeignKey("categories.id"),
         nullable=False
+    )
+
+    correct_answers: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    wrong_answers: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    last_trained_at: Mapped[datetime | None] = (
+        mapped_column(
+            DateTime,
+            nullable=True
+        )
     )

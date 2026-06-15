@@ -1,3 +1,8 @@
+import json
+import random
+
+from datetime import datetime
+
 from app.repositories.word_repository import (
     WordRepository
 )
@@ -42,13 +47,27 @@ class TrainingService:
         if not words:
             return None
 
+        word_ids = [
+            str(word.id)
+            for word in words
+        ]
+
+        random.shuffle(word_ids)
+
         session = self.session_repo.create(
             user_id=user_id,
             category_id=category_id,
-            total_questions=len(words)
+            total_questions=len(words),
+            word_order=json.dumps(word_ids)
         )
 
-        first_word = words[0]
+        first_word_id = word_ids[0]
+
+        first_word = next(
+            word
+            for word in words
+            if str(word.id) == first_word_id
+        )
 
         return {
             "session_id": session.id,
@@ -92,17 +111,35 @@ class TrainingService:
         if not words:
             return None
 
+        word_order = json.loads(
+           session.word_order
+        )
+
+        words_map = {
+            str(word.id): word
+            for word in words
+        }
+
         if session.current_index >= len(words):
             return None
 
-        current_word = words[
+        current_word_id = word_order[
             session.current_index
+        ]
+
+        current_word = words_map[
+            current_word_id
         ]
 
         is_correct = (
             answer.strip().lower()
             ==
             current_word.russian.strip().lower()
+        )
+
+        self.word_repo.update_training_result(
+            word=current_word,
+            is_correct=is_correct
         )
 
         if is_correct:
@@ -113,6 +150,14 @@ class TrainingService:
         self.session_repo.save(session)
 
         if session.current_index >= len(words):
+
+            from datetime import datetime
+
+            session.is_completed = True
+
+            session.completed_at = datetime.utcnow()
+
+            self.session_repo.save(session)
 
             accuracy = int(
                 session.correct_answers
@@ -129,8 +174,12 @@ class TrainingService:
                 "accuracy": accuracy
             }
 
-        next_word = words[
+        next_word_id = word_order[
             session.current_index
+        ]
+
+        next_word = words_map[
+            next_word_id
         ]
 
         return {
@@ -142,3 +191,140 @@ class TrainingService:
                 "english": next_word.english
             }
         }
+
+    def get_history(
+        self,
+        user_id: str
+    ):
+
+        sessions = (
+            self.session_repo
+            .get_user_history(user_id)
+        )
+
+        result = []
+
+        for session in sessions:
+
+            accuracy = int(
+                session.correct_answers
+                * 100
+                / session.total_questions
+            )
+
+            result.append(
+                {
+                    "session_id": session.id,
+                    "created_at": session.created_at,
+                    "completed_at": session.completed_at,
+                    "correct_answers": session.correct_answers,
+                    "total_questions": session.total_questions,
+                    "accuracy": accuracy
+                }
+            )
+
+        return result
+
+    def get_stats(
+        self,
+        user_id: str
+    ):
+
+        sessions = (
+            self.session_repo
+            .get_completed_sessions(
+                user_id
+            )
+        )
+
+        if not sessions:
+
+            return {
+                "total_sessions": 0,
+                "total_questions": 0,
+                "correct_answers": 0,
+                "average_accuracy": 0,
+                "best_accuracy": 0
+            }
+
+        total_sessions = len(
+            sessions
+        )
+
+        total_questions = sum(
+            s.total_questions
+            for s in sessions
+        )
+
+        correct_answers = sum(
+            s.correct_answers
+            for s in sessions
+        )
+
+        accuracies = [
+            int(
+                s.correct_answers
+                * 100
+                / s.total_questions
+            )
+            for s in sessions
+        ]
+
+        average_accuracy = int(
+            sum(accuracies)
+            / len(accuracies)
+        )
+
+        best_accuracy = max(
+            accuracies
+        )
+
+        return {
+            "total_sessions": total_sessions,
+            "total_questions": total_questions,
+            "correct_answers": correct_answers,
+            "average_accuracy": average_accuracy,
+            "best_accuracy": best_accuracy
+        }
+    
+    def get_word_progress(
+        self,
+        user_id: str
+    ):
+
+        words = self.word_repo.get_progress(
+        user_id
+        )
+
+        result = []
+
+        for word in words:
+
+            total = (
+                word.correct_answers
+                +
+                word.wrong_answers
+            )
+
+            accuracy = (
+                int(
+                    word.correct_answers
+                    * 100
+                    / total
+                )
+                if total > 0
+                else 0
+            )
+
+            result.append(
+                {
+                    "word_id": word.id,
+                    "english": word.english,
+                    "correct_answers": word.correct_answers,
+                    "wrong_answers": word.wrong_answers,
+                    "accuracy": accuracy,
+                    "last_trained_at": word.last_trained_at
+                }
+            )
+
+        return result
