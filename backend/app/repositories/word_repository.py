@@ -187,6 +187,44 @@ class WordRepository:
             .all()
         )
 
+    def get_review_queue(
+        self,
+        user_id: str
+    ) -> list[Word]:
+
+        from datetime import datetime
+
+        due_words = (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .filter(
+                (Word.next_review_at == None)
+                |
+                (Word.next_review_at <= datetime.utcnow())
+            )
+            .order_by(
+                Word.difficulty.desc(),
+                Word.next_review_at.asc()
+            )
+            .all()
+        )
+
+        if due_words:
+            return due_words
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .order_by(
+                Word.next_review_at.asc()
+            )
+            .all()
+        )
+
     def get_hard_words(
         self,
         user_id: str

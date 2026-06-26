@@ -1,8 +1,6 @@
 import json
-import random
 
 from datetime import datetime
-from datetime import timedelta
 
 from app.repositories.word_repository import (
     WordRepository
@@ -11,17 +9,6 @@ from app.repositories.word_repository import (
 from app.repositories.training_session_repository import (
     TrainingSessionRepository
 )
-
-REVIEW_INTERVALS = {
-    0: 1,
-    1: 3,
-    2: 7,
-    3: 14,
-    4: 30,
-    5: 60,
-    6: 90
-}
-
 class TrainingService:
 
     def __init__(
@@ -62,7 +49,7 @@ class TrainingService:
 
             words = (
                 self.word_repo
-                .get_words_for_review(
+                .get_review_queue(
                     user_id=user_id
                 )   
             )
@@ -74,8 +61,6 @@ class TrainingService:
             str(word.id)
             for word in words
         ]
-
-        random.shuffle(word_ids)
 
         session = self.session_repo.create(
             user_id=user_id,
