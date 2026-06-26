@@ -2,6 +2,7 @@ import json
 import random
 
 from datetime import datetime
+from datetime import timedelta
 
 from app.repositories.word_repository import (
     WordRepository
@@ -11,6 +12,15 @@ from app.repositories.training_session_repository import (
     TrainingSessionRepository
 )
 
+REVIEW_INTERVALS = {
+    0: 1,
+    1: 3,
+    2: 7,
+    3: 14,
+    4: 30,
+    5: 60,
+    6: 90
+}
 
 class TrainingService:
 
@@ -38,10 +48,23 @@ class TrainingService:
                 )
             )
 
+            words = [
+                word
+                for word in words
+                if (
+                    word.next_review_at is None
+                    or
+                    word.next_review_at <= datetime.utcnow()
+                )
+            ]
+
         else:
 
-            words = self.word_repo.get_by_user_id(
-                user_id=user_id
+            words = (
+                self.word_repo
+                .get_words_for_review(
+                    user_id=user_id
+                )   
             )
 
         if not words:
@@ -120,7 +143,7 @@ class TrainingService:
             for word in words
         }
 
-        if session.current_index >= len(words):
+        if session.current_index >= len(word_order):
             return None
 
         current_word_id = word_order[
@@ -149,7 +172,7 @@ class TrainingService:
 
         self.session_repo.save(session)
 
-        if session.current_index >= len(words):
+        if session.current_index >= len(word_order):
 
             from datetime import datetime
 
@@ -324,6 +347,43 @@ class TrainingService:
                     "wrong_answers": word.wrong_answers,
                     "accuracy": accuracy,
                     "last_trained_at": word.last_trained_at
+                }
+            )
+
+        return result
+
+    def get_hard_words(
+        self,
+        user_id: str
+    ):
+
+        words = (
+            self.word_repo
+            .get_hard_words(user_id)
+        )
+
+        result = []
+
+        for word in words:
+
+            result.append(
+                {
+                    "word_id": word.id,
+                    "english": word.english,
+                    "russian": word.russian,
+                    "difficulty": word.difficulty,
+                    "correct_answers": (
+                        word.correct_answers
+                    ),
+                    "wrong_answers": (
+                        word.wrong_answers
+                    ),
+                    "repetition_level": (
+                        word.repetition_level
+                    ),
+                    "next_review_at": (
+                        word.next_review_at
+                    )
                 }
             )
 

@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
+from datetime import datetime
 from app.models.word import Word
 
 
@@ -37,6 +39,26 @@ class WordRepository:
         return (
             self.db.query(Word)
             .filter(Word.user_id == user_id)
+            .all()
+        )
+
+    def get_words_for_review(
+        self,
+        user_id: str,
+        category_id: str | None = None
+    ) -> list[Word]:
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .filter(
+                or_(
+                    Word.next_review_at.is_(None),
+                    Word.next_review_at <= datetime.utcnow()
+                )
+            )
             .all()
         )
 
@@ -96,13 +118,56 @@ class WordRepository:
     ) -> Word:
 
         from datetime import datetime
+        from datetime import timedelta
+
+        review_intervals = {
+            0: 1,
+            1: 3,
+            2: 7,
+            3: 14,
+            4: 30,
+            5: 60,
+            6: 90
+        }
 
         if is_correct:
+
             word.correct_answers += 1
+
+            word.difficulty = max(
+                0.0,
+                word.difficulty - 0.05
+            )
+
+            word.repetition_level = min(
+                6,
+                word.repetition_level + 1
+            )
+
         else:
+
             word.wrong_answers += 1
 
+            word.difficulty = min(
+                1.0,
+                word.difficulty + 0.10
+            )
+
+            word.repetition_level = max(
+                0,
+                word.repetition_level - 1
+            )
+
         word.last_trained_at = datetime.utcnow()
+
+        days = review_intervals[
+            word.repetition_level
+        ]
+
+        word.next_review_at = (
+            datetime.utcnow()
+            + timedelta(days=days)
+        )
 
         self.db.add(word)
         self.db.commit()
@@ -118,6 +183,25 @@ class WordRepository:
             self.db.query(Word)
             .filter(
                 Word.user_id == user_id
+            )
+            .all()
+        )
+
+    def get_hard_words(
+        self,
+        user_id: str
+    ):
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .filter(
+                Word.difficulty >= 0.7
+            )
+            .order_by(
+                Word.difficulty.desc()
             )
             .all()
         )

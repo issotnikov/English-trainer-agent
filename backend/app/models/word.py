@@ -1,8 +1,7 @@
 from uuid import uuid4
-
 from sqlalchemy import Integer
 from sqlalchemy import DateTime
-
+from sqlalchemy import Float
 from datetime import datetime
 
 from sqlalchemy import String
@@ -60,4 +59,21 @@ class Word(Base):
             DateTime,
             nullable=True
         )
+    )
+
+    difficulty: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.5
+    )
+
+    repetition_level: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    next_review_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
     )

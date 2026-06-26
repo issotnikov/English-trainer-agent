@@ -46,6 +46,10 @@ from app.schemas.word_progress import (
     WordProgressResponse
 )
 
+from app.schemas.hard_word import (
+    HardWordResponse
+)
+
 router = APIRouter(
     prefix="/training",
     tags=["training"]
@@ -91,7 +95,8 @@ def start_training(
 
 @router.post(
     "/{session_id}/answer",
-    response_model=TrainingAnswerResponse
+    response_model=TrainingAnswerResponse,
+    response_model_exclude_none=True
 )
 def answer_training(
     session_id: str,
@@ -204,5 +209,33 @@ def get_word_progress(
     )
 
     return service.get_word_progress(
+        current_user.id
+    )
+
+@router.get(
+    "/hard-words",
+    response_model=list[
+        HardWordResponse
+    ]
+)
+def get_hard_words(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    word_repo = WordRepository(db)
+
+    session_repo = (
+        TrainingSessionRepository(db)
+    )
+
+    service = TrainingService(
+        word_repo=word_repo,
+        session_repo=session_repo
+    )
+
+    return service.get_hard_words(
         current_user.id
     )

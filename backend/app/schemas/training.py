@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class TrainingAnswerRequest(BaseModel):
@@ -13,6 +14,11 @@ class NextWordResponse(BaseModel):
 
 
 class TrainingAnswerResponse(BaseModel):
+
+    model_config = ConfigDict(
+        ser_json_exclude_none=True
+    )
+    
     is_correct: bool
     correct_answer: str
 
