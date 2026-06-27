@@ -19,6 +19,11 @@ from app.repositories.word_repository import (
 
 from app.services.word_service import WordService
 
+from app.schemas.import_words import (
+    ImportWordItem,
+    ImportWordsResponse
+)
+
 
 router = APIRouter(
     prefix="/words",
@@ -84,3 +89,40 @@ def delete_word(
     )
 
     return {"success": success}
+
+@router.get("/export/json")
+def export_words(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    repo = WordRepository(db)
+
+    service = WordService(repo)
+
+    return service.export_words(
+        user_id=current_user.id
+    )
+
+@router.post(
+    "/import/json",
+    response_model=ImportWordsResponse
+)
+def import_words(
+    words: list[ImportWordItem],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    repo = WordRepository(db)
+
+    service = WordService(repo)
+
+    return service.import_words(
+        words=words,
+        user_id=current_user.id
+    )

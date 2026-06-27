@@ -243,3 +243,35 @@ class WordRepository:
             )
             .all()
         )
+
+    def export_words(
+        self,
+        user_id: str
+    ) -> list[Word]:
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id
+            )
+            .order_by(
+                Word.english
+            )
+            .all()
+        )
+
+    def exists(
+        self,
+        english: str,
+        user_id: str
+    ) -> bool:
+
+        return (
+            self.db.query(Word)
+            .filter(
+                Word.user_id == user_id,
+                Word.english == english
+            )
+            .first()
+            is not None
+        )

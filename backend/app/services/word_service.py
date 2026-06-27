@@ -54,3 +54,65 @@ class WordService:
            category_id=category_id,
            user_id=user_id
         )
+
+    def export_words(
+        self,
+        user_id: str
+    ):
+
+        words = self.repo.export_words(
+            user_id=user_id
+        )
+
+        result = []
+
+        for word in words:
+
+            result.append(
+                {
+                    "id": word.id,
+                    "english": word.english,
+                    "russian": word.russian,
+                    "category_id": word.category_id,
+                    "correct_answers": word.correct_answers,
+                    "wrong_answers": word.wrong_answers,
+                    "difficulty": word.difficulty,
+                    "repetition_level": word.repetition_level,
+                    "next_review_at": word.next_review_at,
+                    "last_trained_at": word.last_trained_at
+                }
+            )
+
+        return result
+
+    def import_words(
+        self,
+        words: list,
+        user_id: str
+    ):
+
+        imported = 0
+        skipped = 0
+
+        for item in words:
+
+            if self.repo.exists(
+                english=item.english,
+                user_id=user_id
+            ):
+                skipped += 1
+                continue
+
+            self.repo.create(
+                english=item.english,
+                russian=item.russian,
+                user_id=user_id,
+                category_id=item.category_id
+            )
+
+            imported += 1
+
+        return {
+            "imported": imported,
+            "skipped": skipped
+        }
